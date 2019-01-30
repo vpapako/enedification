@@ -2,6 +2,9 @@ package main
 
 import (
 	"bytes"
+	"github.com/docker/libcompose/docker"
+	"github.com/docker/libcompose/docker/ctx"
+	"github.com/docker/libcompose/project"
 	"io/ioutil"
 	"log"
 	"net"
@@ -13,7 +16,7 @@ import (
 	"time"
 )
 
-func findIPAdresses() (string, string){
+func findIPAdresses() (string, string) {
 
 	// Private IP
 	var nodeIP net.IP
@@ -48,7 +51,6 @@ func findIPAdresses() (string, string){
 
 	publicIP := responseBody
 
-
 	return privateIP, publicIP
 }
 
@@ -57,8 +59,8 @@ func main() {
 
 	//1. Find Private and Public IP Addresses of the (Virtual) Machine
 	privateIP, publicIP := findIPAdresses()
-	log.Println("INFO: Private IP of the machine: "+privateIP)
-	log.Println("INFO: Public IP of the machine: "+publicIP)
+	log.Println("INFO: Private IP of the machine: " + privateIP)
+	log.Println("INFO: Public IP of the machine: " + publicIP)
 
 	//2. Check if netdata is installed
 	log.Println("INFO: Checking if netdata is installed")
@@ -134,7 +136,7 @@ func main() {
 		}
 
 		//2d. sudo service netdata restart
-		cmd = exec.Command("bash","-c", "service netdata restart")
+		cmd = exec.Command("bash", "-c", "service netdata restart")
 		cmd.Stdout = &out
 		err = cmd.Run()
 		if err != nil {
@@ -142,12 +144,18 @@ func main() {
 		}
 		log.Println("INFO: Netdata is successfully installed")
 
-
 	} else {
 		log.Println("INFO: Netdata is installed")
 	}
 
 	//3. Check for Local Consul Master
+	log.Println("INFO: Setting up ENEDI monitoring infrastructure")
+	project, err := docker.NewProject(&ctx.Context{
+		Context: project.Context{
+			ComposeFiles: []string{"docker-compose.yml"},
+			ProjectName:  "yeah-compose",
+		},
+	}, nil)
 
 	//4. Start Prometheus
 
@@ -156,6 +164,5 @@ func main() {
 	//6. Insert Record to DB
 
 	//7. Connect to remote consul with some tags
-
 
 }
