@@ -2,9 +2,7 @@ package main
 
 import (
 	"bytes"
-	"github.com/docker/libcompose/docker"
-	"github.com/docker/libcompose/docker/ctx"
-	"github.com/docker/libcompose/project"
+	"github.com/hashicorp/consul/api"
 	"io/ioutil"
 	"log"
 	"net"
@@ -15,6 +13,20 @@ import (
 	"syscall"
 	"time"
 )
+
+// ServerConfig Properties red from config yaml file
+type ServerConfig struct {
+	ConsulIP     string `yaml:"consulIP"`
+	ConsulPort   string `yaml:"consulPort"`
+	ConsulScheme string `yaml:"consulScheme"`
+	NodeName     string `yaml:"nodeName"`
+	ServiceName  string `yaml:"serviceName"`
+	Location     string `yaml:"location"`
+	Datacenter   string `yaml:"datacenter"`
+	Type         string `yaml:"type"`
+}
+
+var srvConf ServerConfig
 
 func findIPAdresses() (string, string) {
 
@@ -80,24 +92,7 @@ func main() {
 		if err = cmd.Run(); err != nil {
 			log.Printf("Error %v\n", "Could not start process")
 		}
-		/*ch := make(chan error)
-		go func() {
-			ch <- cmd.Wait()
-		}()
 
-		select {
-		case <-time.After(10 * time.Second):
-			if err = cmd.Process.Kill(); err != nil {
-				log.Printf("Error %v\n", "Could not kill process")
-			}
-		case err = <-ch:
-			if err != nil {
-				log.Printf("Error 2 %v\n", "Could not kill process")
-			}
-		}
-		if err != nil {
-			log.Fatalf("Could not run script")
-		}*/
 		cmd = exec.Command("rm", "/tmp/kickstart.sh", "-rf")
 		cmd.Stdout = &out
 		err = cmd.Run()
@@ -150,18 +145,43 @@ func main() {
 
 	//3. Check for Local Consul Master
 	log.Println("INFO: Setting up ENEDI monitoring infrastructure")
-	project, err := docker.NewProject(&ctx.Context{
-		Context: project.Context{
-			ComposeFiles: []string{"docker-compose.yml"},
-			ProjectName:  "yeah-compose",
-		},
-	}, nil)
+	cmd := exec.Command("bash", "-c", "docker-compose -f monitoring-infra/docker-compose.yaml up -d" )
+	if err := cmd.Run(); err != nil {
+		log.Printf("Error %v\n", "Could not start run ENEDI infrastructure compose")
+	}
 
-	//4. Start Prometheus
 
-	//5. Configure Prometheus
+	//4. Insert Record to DB
+	var config = &api.Config{
+		Address: "localhost:8500",
+		Scheme:  "http",
+	}
+	client, err := api.NewClient(config)
+	if err != nil {
+		log.Fatalf("Error: %v\n", err)
+	}
+	agent := client.Agent()
+	var tags []string
+	tags = append(tags, "uCatascopia")
 
-	//6. Insert Record to DB
+	var agService = &api.AgentServiceRegistration{
+		Address: privateIP,
+		Port:    19999,
+		Name:    "netdata",
+		Tags:    tags,
+	}
+
+	// Sleep for a while - to ensure registration sleep duration: 30s
+	log.Println("Waiting for Consul Server to initialize...")
+	time.Sleep(10 * time.Second)
+	// After sleep -- Register
+	err = agent.ServiceRegister(agService)
+	if err != nil {
+		log.Fatalf("Error at Service Register: %v\n", err)
+	}
+	log.Println("Netdata service registered")
+
+
 
 	//7. Connect to remote consul with some tags
 
