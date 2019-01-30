@@ -1,0 +1,35 @@
+# my global config
+global:
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+  evaluation_interval: 15s # By default, scrape targets every 15 seconds.
+  scrape_timeout: 14s
+  external_labels:
+    monitor: 'ENEDI'
+
+
+scrape_configs:
+
+  - job_name: 'netdata'
+    # Override the global default and scrape targets from this job every 5 seconds.
+
+    # List of Consul service discovery configurations.
+    consul_sd_configs:
+      - server: 'localhost:8500'
+    relabel_configs:
+      - source_labels: [__meta_consul_tags]
+        regex: .*,uCatascopia,.*
+        action: keep
+    metrics_path: '/api/v1/allmetrics'
+    params:
+      format: [prometheus]
+    honor_labels: true
+    scrape_interval: 15s
+
+
+# Settings related to the remote write feature.
+remote_write:
+  - url: "http://localhost:9201/write"
+
+# Settings related to the remote read feature.
+remote_read:
+  - url: "http://localhost:9201/read"
