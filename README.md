@@ -123,6 +123,6 @@ Wait the agent to finish installation. After the installation finishes you can c
 | Prometheus    | <Public_IP>:9090 | 
 | Netdata     | <Public_IP>:19999  |
 | Consul | <Public_IP>:8500      |  
-| InfluDB Telegraph | <Public_IP>:8888      |  
+| InfluxDB Telegraph | <Public_IP>:8888      |  
 
 
