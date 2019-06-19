@@ -100,7 +100,7 @@ go get github.com/hashicorp/consul/api
 ``` 
 4. Clone the repo 
 ```
-git clone https://github.com/than-tryf/enedification.git
+git clone https://github.com/vpapako/enedification.git
 ```   
 
 5. Change directory to point at $HOME/goimports/src/enedification/datacenter-agent and run the script build-with-docker.sh
