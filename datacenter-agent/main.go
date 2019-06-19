@@ -37,7 +37,7 @@ func findIPAdresses() (string, string) {
 		addresses, _ := iface.Addrs()
 		key := iface.Name
 		for _, address := range addresses {
-			if strings.Contains(key, "en") || strings.Contains(key, "eth") || strings.Contains(key, "wl") {
+			if key == "br-bond0" {
 				addIP, _, _ := net.ParseCIDR(address.String())
 				if addIP.To4() != nil {
 					nodeIP = addIP
@@ -77,11 +77,12 @@ func main() {
 	//2. Check if netdata is installed
 	log.Println("INFO: Checking if netdata is installed")
 	var out bytes.Buffer
-	if _, errexists := os.Stat("/opt/netdata/etc/netdata/netdata.conf"); errexists != nil {
+	if _, errexists := os.Stat("/etc/netdata/netdata.conf"); errexists != nil {
 		log.Println("INFO: Netdata is not installed. Installation will begin shortly...")
 
 		//2a. Download the official script and run it
-		cmd := exec.Command("bash", "-c", "curl -Ss 'https://my-netdata.io/kickstart-static64.sh' > /tmp/kickstart.sh")
+		//cmd := exec.Command("bash", "-c", "curl -Ss 'https://my-netdata.io/kickstart-static64.sh' > /tmp/kickstart.sh")
+		cmd := exec.Command("bash", "-c", "curl -Ss 'https://my-netdata.io/kickstart.sh' > /tmp/kickstart.sh")
 		cmd.Stdout = &out
 		err := cmd.Run()
 		if err != nil {
@@ -104,7 +105,7 @@ func main() {
 
 		time.Sleep(2 * time.Second)
 		//2b. Get Netdata Configuration and update the [backend] prefix
-		cmd = exec.Command("bash", "-c", "sudo wget -O /opt/netdata/etc/netdata/netdata.conf 'http://localhost:19999/netdata.conf'")
+		cmd = exec.Command("bash", "-c", "sudo wget -O /etc/netdata/netdata.conf 'http://localhost:19999/netdata.conf'")
 		cmd.Stdout = &out
 		err = cmd.Run()
 		if err != nil {
@@ -112,20 +113,26 @@ func main() {
 		}
 
 		//2c. Edit Netdata Configuration
-		input, err := ioutil.ReadFile("/opt/netdata/etc/netdata/netdata.conf")
+		input, err := ioutil.ReadFile("/etc/netdata/netdata.conf")
 		if err != nil {
 			log.Fatalf("ERROR: Reading netdata config: %v\n", err)
 		}
 
 		lines := strings.Split(string(input), "\n")
 
+		// get hostname in order to use it in the metrics' prefix
+		hostName, err := os.Hostname()
+		if err != nil {
+                        log.Fatalf("ERROR: Could not get hostname: %v\n", err)
+                }
+
 		for i, line := range lines {
 			if strings.Contains(line, "# prefix = netdata") {
-				lines[i] = "\tprefix = crete_dc1_master"
+				lines[i] = "\tprefix = greece_heraklion_uoc_dc1_" + hostName
 			}
 		}
 		output := strings.Join(lines, "\n")
-		err = ioutil.WriteFile("/opt/netdata/etc/netdata/netdata.conf", []byte(output), 0644)
+		err = ioutil.WriteFile("/etc/netdata/netdata.conf", []byte(output), 0644)
 		if err != nil {
 			log.Fatalf("ERROR: Could not write netdata configuration: %v\n", err)
 		}
