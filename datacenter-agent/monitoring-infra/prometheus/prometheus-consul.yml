@@ -32,4 +32,4 @@ remote_write:
 
 # Settings related to the remote read feature.
 remote_read:
-  - url: "http://localhost:8086/api/v1/prom/write?db=prometheus&u=prometheus&p=password"
+  - url: "http://localhost:8086/api/v1/prom/read?db=prometheus&u=prometheus&p=password"
