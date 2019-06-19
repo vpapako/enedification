@@ -28,8 +28,8 @@ scrape_configs:
 
 # Settings related to the remote write feature.
 remote_write:
-  - url: "http://localhost:9201/write"
+  - url: "http://localhost:8086/api/v1/prom/write?db=prometheus&u=prometheus&p=password"
 
 # Settings related to the remote read feature.
 remote_read:
-  - url: "http://localhost:9201/read"
+  - url: "http://localhost:8086/api/v1/prom/write?db=prometheus&u=prometheus&p=password"
