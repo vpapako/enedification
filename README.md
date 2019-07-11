@@ -19,7 +19,7 @@ The operating system of the server should be Ubuntu 16.04 64-bits. The server sh
 To install GO please follow the following steps:
 
 ```
-sudo curl -O https://dl.google.com/go/go1.11.5.src.tar.gz
+sudo curl -O https://dl.google.com/go/go1.11.5.linux-amd64.tar.gz
 
 sudo tar -C /usr/local -xzf go$VERSION.$OS-$ARCH.tar.gz
 
