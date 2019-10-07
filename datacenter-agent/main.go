@@ -128,7 +128,7 @@ func main() {
 
 		for i, line := range lines {
 			if strings.Contains(line, "# prefix = netdata") {
-				lines[i] = "\tprefix = greece_heraklion_uoc_dc1_" + hostName
+				lines[i] = "\tprefix = greece__heraklion__uoc__dc1__" + hostName
 			}
 		}
 		output := strings.Join(lines, "\n")
